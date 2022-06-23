@@ -512,7 +512,10 @@ export class MoveHeaderCommand extends BasicCommand<
       const writeResp = await engine.writeNote(note!, {
         updateExisting: true,
       });
-      updated.push(writeResp.data[0].note);
+
+      if (writeResp.data) {
+        updated.push(writeResp.data[0].note);
+      }
     });
 
     return updated;
