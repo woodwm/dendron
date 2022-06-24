@@ -4,7 +4,9 @@ import {
   WorkspaceEvents,
 } from "@dendronhq/common-all";
 import { file2Note } from "@dendronhq/common-server";
+import { DoctorActionsEnum } from "@dendronhq/engine-server";
 import * as vscode from "vscode";
+import { DoctorCommand } from "../../commands/Doctor";
 import { ExtensionProvider } from "../../ExtensionProvider";
 import { Logger } from "../../logger";
 import { AnalyticsUtils } from "../../utils/analytics";
@@ -80,7 +82,24 @@ export class DoctorUtils {
           noteA: duplicate,
           noteB: note,
         });
-        VSCodeUtils.showMessage(MessageSeverity.WARN, error.message, {});
+        VSCodeUtils.showMessage(
+          MessageSeverity.WARN,
+          error.message,
+          {},
+          { title: "Fix It" }
+        ).then((resp) => {
+          if (resp && resp.title === "Fix It") {
+            const cmd: vscode.Command = {
+              command: new DoctorCommand(ExtensionProvider.getExtension()).key,
+              title: "Fix the frontmatter",
+              arguments: [
+                { scope: "file", action: DoctorActionsEnum.REGENERATE_NOTE_ID },
+              ],
+            };
+
+            vscode.commands.executeCommand(cmd.command, ...cmd.arguments);
+          }
+        });
         AnalyticsUtils.track(WorkspaceEvents.DuplicateNoteFound, {
           source,
         });
